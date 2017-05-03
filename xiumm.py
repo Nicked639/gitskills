@@ -12,7 +12,7 @@ def generate_url_list(url, page_total):
 def download_image(url):
     html_source = requests.get(url)
     html_source.encoding = 'utf-8'
-    soup = BeautifulSoup(html_source.text, 'lxml')
+    soup = BeautifulSoup(html_source.text, 'html.parser')
     items = soup.findAll("div",{"class":"pic_box"})
     items_img = []
     items_img.append(items[0].img['src'])
@@ -24,7 +24,7 @@ def download_image(url):
 def download_image_else(url):
     html_source = requests.get(url)
     html_source.encoding = 'utf-8'
-    soup = BeautifulSoup(html_source.text, 'lxml')
+    soup = BeautifulSoup(html_source.text, 'html.parser')
     items = soup.findAll("div",{"class":"pic_box"})
     items_img = []
     for i in range(1,6):
