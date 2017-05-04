@@ -13,6 +13,13 @@ def generate_url_list(url, page_total):
 		url_list.append(url.split('.html')[0]+'-'+str(i)+'.html')
 	return url_list
 
+def count_page(url):
+	hs = requests.get(url)
+	hs.encoding = 'utf-8'
+	pattern = '(?<=共).*(?=页)'
+	match = re.findall(pattern, hs.text)
+	return match[0]
+
 def create_folder(url):
 	hs = requests.get(url)
 	hs.encoding = 'utf-8'
@@ -79,10 +86,7 @@ if __name__ == '__main__':
 	down_count = 0
 	dp_count = 0
 	url = "http://www.xiumm.org/photos/YOUMI-17244.html"
-	q=console.input_alert('请输入下载页数','每页5张图')
-	if not q:
-		exit()
-	page_total = int(q)
+	page_total = int(count_page(url))
     # 生成图像页码页面，用于map函数进行多线程下载
 	url_list = generate_url_list(url, page_total)
     # 生成的文件夹名字
