@@ -21,8 +21,8 @@ def config_url(url):
 	folder_name = re.findall(pattern_name, hs.text)[0]
 	print(folder_name)
 	desktop_path = os.path.join(os.path.expanduser("~"),'Desktop')
-	path = desktop_path + '\\' + folder_name
-	config = {'page_total': int(page), 'folder_name': folder_name, 'folder_path': path}	
+	folder_path = os.path.join(desktop_path, folder_name)
+	config = {'page_total': int(page), 'folder_name': folder_name, 'folder_path': folder_path}	
 	return config
 
 def folder_size(folder_path):
