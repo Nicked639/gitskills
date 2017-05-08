@@ -5,12 +5,23 @@ import requests
 import re
 import time
 import sys
+
+
+def get_homepage(url):
+	m = url.split('-')
+	if len(m) == 3:
+		url = m[0] + '-' + m[1] + '.html'
+	return url
+		
+		
+
 def generate_url_list(url, page_total):
 	url_list = []
 	url_list.append(url)
 	for i in range(2, page_total+1):
 		url_list.append(url.split('.html')[0]+'-'+str(i)+'.html')
 	return url_list
+
 
 def config_url(url):
 	hs = requests.get(url)
@@ -22,8 +33,9 @@ def config_url(url):
 	print(folder_name)
 	desktop_path = os.path.join(os.path.expanduser("~"),'Desktop')
 	folder_path = os.path.join(desktop_path, folder_name)
-	config = {'page_total': int(page), 'folder_name': folder_name, 'folder_path': folder_path}	
+	config = {'page_total': int(page), 'folder_name': folder_name, 'folder_path': folder_path}
 	return config
+
 
 def folder_size(folder_path):
 	#size = sum(os.path.getsize(f) for f in os.listdir(folder_path) if os.path.isfile(f))
@@ -38,6 +50,7 @@ def folder_size(folder_path):
 		total_size=str(total_size//1024)+'KB'
 	return total_size
 
+
 def download_url(url):
 	hs = requests.get(url)
 	hs.encoding = 'utf-8'
@@ -48,51 +61,51 @@ def download_url(url):
 		img_url.append('http://www.xiumm.org/data'+m)
 	return img_url
 
+
 def download_img(url):
 	global down_count, dp_count, img_num
 	down_count = down_count+1
 	dp_count = dp_count+1
-	dp='□'*15
+	dp = '□' * 15
 	status = '下载中'
 	if dp_count > 14:
 		dp_count = 0
 	elif down_count == img_num:
-		dp_count=15
-		status='完成!'
+		dp_count = 15
+		status = '完成!'
 	else:
 		pass
-	dp = dp.replace('□','■',dp_count)
+	dp = dp.replace('□', '■', dp_count)
 	sys.stdout.write('\r'+status+dp+'('+str(down_count)+'/'+str(img_num)+')')
 	sys.stdout.flush()
 	
-	img_data = requests.get(url, timeout=3).content
+	img_data = requests.get(url, timeout=10).content
 	img_name = url.split('/')[-1]
-	with open(folder_path + '\\' + img_name,'wb') as handler:
+	with open(folder_path + '\\' + img_name, 'wb') as handler:
 		handler.write(img_data)
 
+
 if __name__ == '__main__':
-    # 初始化设置
+	# 初始化设置
 	global folder_path
 	down_count = 0
 	dp_count = 0
 	config = {}
-	url = 'http://www.xiumm.org/photos/BoLoLI-17239.html'
+	url = 'http://www.xiumm.org/photos/KeLa-17240.html'
+	url = get_homepage(url)
 	config = config_url(url)
-
-    # 生成的存储图像路径，map 的函数接受一个参数，故用了全局参数作为存图路径
+	# 生成图像页码页面，用于map函数进行多线程下载
+	page_total= config['page_total']
+	url_list = generate_url_list(url, page_total)
+	# 生成的存储图像路径，map 的函数接受一个参数，故用了全局参数作为存图路径
 	folder_name = config['folder_name']
 	folder_path = config['folder_path']
 	if os.path.isdir(folder_path):
 		pass
 	else:
 		os.makedirs(folder_path)
-
-	# 生成图像页码页面，用于map函数进行多线程下载
-	page_total= 1 #config['page_total']
-	url_list = generate_url_list(url, page_total)
-
 	# 获取图像 url list
-	pool = ThreadPool(4)
+	pool = ThreadPool(20)
 	down_url = pool.map(download_url, url_list)
 	pool.close()
 	pool.join() 
@@ -103,10 +116,10 @@ if __name__ == '__main__':
 	# 下载图像
 	img_num = len(download_url_list)
 	t1 = int(time.time())
-	pool2 = ThreadPool(6)
+	pool2 = ThreadPool(30)
 	pool2.map(download_img, download_url_list)
 	pool2.close()
 	pool2.join()
 	t2 = int(time.time())	
 	total_size = folder_size(folder_path)
-	print('\n共计下载图片: '+str(len(download_url_list))+'张\n耗时: '+str(t2-t1)+'秒。\n文件夹大小:'+total_size+'\n文件默认保存在桌面:'+folder_name)
+	print('\n共计下载图片: '+str(img_num)+'张\n耗时: '+str(t2-t1)+'秒。\n文件夹大小:'+total_size+'\n文件默认保存在桌面:'+folder_name)
