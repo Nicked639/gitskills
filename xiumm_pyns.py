@@ -97,7 +97,8 @@ if __name__ == '__main__':
 	else:
 		os.makedirs(folder_path)
 		
-    # 生成图像页码页面，用于map函数进行多线程下载
+    # 生成图像页码页面，用于map函数进行多线程下
+    
 	page_total = config['page_total']
 	url_list = generate_url_list(url, page_total)
 		
