@@ -5,15 +5,31 @@ import requests
 import re
 import time
 import sys
+from tkinter import *
+import tkinter.messagebox as messagebox
+from bs4 import BeautifulSoup as bs
 
+class Application(Frame):
+    def __init__(self, master=None):
+        Frame.__init__(self, master)
+        self.pack()
+        self.createWidgets()
+
+    def createWidgets(self):
+        self.nameInput = Entry(self)
+        self.nameInput.pack()
+        self.alertButton = Button(self, text='下载', command=self.hello)
+        self.alertButton.pack()
+
+    def hello(self):
+        name = self.nameInput.get()
+        download(name)
 
 def get_homepage(url):
 	m = url.split('-')
 	if len(m) == 3:
 		url = m[0] + '-' + m[1] + '.html'
-	return url
-		
-		
+	return url		
 
 def generate_url_list(url, page_total):
 	url_list = []
@@ -26,10 +42,14 @@ def generate_url_list(url, page_total):
 def config_url(url):
 	hs = requests.get(url)
 	hs.encoding = 'utf-8'
+	soup = bs(hs.text, 'html.parser')
 	pattern_page = '(?<=共).*(?=页)'
-	pattern_name = '(?<=<title>).*(?= \-)'
 	page = re.findall(pattern_page, hs.text)[0]
-	folder_name = re.findall(pattern_name, hs.text)[0]
+	#pattern_name = '(?<=<title>).*(?= \-)'
+	#folder_name = re.findall(pattern_name, hs.text)[0]
+	#folder_name = '波萝社新刊 [BoLoLi] 2017-07-12 Vol.082 夏美酱 放課後の夏美 [59P]'
+	name = soup.select('.inline')[0].getText().strip()
+	folder_name = name.replace('\n','')
 	print(folder_name)
 	desktop_path = os.path.join(os.path.expanduser("~"),'Desktop')
 	folder_path = os.path.join(desktop_path, folder_name)
@@ -54,13 +74,20 @@ def folder_size(folder_path):
 def download_url(url):
 	hs = requests.get(url)
 	hs.encoding = 'utf-8'
-	pattern_url = '(?<=/data).*\.jpg'
-	match_url = re.findall(pattern_url, hs.text)
-	img_url = []
-	for m in match_url:
-		img_url.append('http://www.xiumm.org/data'+m)
+	soup = bs(hs.text, 'html.parser')
+	namelist = soup.select('img[src]')
+	img_url = [namelist[i].get('src') for i in range(len(namelist)) if '.jpg' in namelist[i].get('src')]
+	for i,j in enumerate(img_url):
+		if 'xiumm' in j:
+			pass
+		else:
+			img_url[i] = 'http://www.xiumm.org' + j
+	# pattern_url = '(?<=/data).*\.jpg'
+	# match_url = re.findall(pattern_url, hs.text)
+	# img_url = []
+	# for m in imglist:
+	# 	img_url.append('http://www.xiumm.org/data/'+m)
 	return img_url
-
 
 def download_img(url):
 	global down_count, dp_count, img_num
@@ -78,20 +105,16 @@ def download_img(url):
 	dp = dp.replace('□', '■', dp_count)
 	sys.stdout.write('\r'+status+dp+'('+str(down_count)+'/'+str(img_num)+')')
 	sys.stdout.flush()
-	
 	img_data = requests.get(url, timeout=10).content
 	img_name = url.split('/')[-1]
 	with open(folder_path + '\\' + img_name, 'wb') as handler:
 		handler.write(img_data)
 
+def download(url):
 
-if __name__ == '__main__':
-	# 初始化设置
-	global folder_path
-	down_count = 0
-	dp_count = 0
+	global folder_path, img_num
 	config = {}
-	url = 'http://www.xiumm.org/photos/KeLa-17240.html'
+	# url = 'http://www.xiumm.org/photos/LUGirls-17273-2.html'
 	url = get_homepage(url)
 	config = config_url(url)
 	# 生成图像页码页面，用于map函数进行多线程下载
@@ -119,7 +142,17 @@ if __name__ == '__main__':
 	pool2 = ThreadPool(30)
 	pool2.map(download_img, download_url_list)
 	pool2.close()
-	pool2.join()
+	#pool2.join()
 	t2 = int(time.time())	
 	total_size = folder_size(folder_path)
 	print('\n共计下载图片: '+str(img_num)+'张\n耗时: '+str(t2-t1)+'秒。\n文件夹大小:'+total_size+'\n文件默认保存在桌面:'+folder_name)
+
+
+# 初始化设置
+down_count = 0
+dp_count = 0
+app = Application()
+# 设置窗口标题:
+app.master.title('下载')
+# 主消息循环:
+app.mainloop()
