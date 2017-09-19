@@ -7,6 +7,7 @@ import time
 import sys
 from tkinter import *
 import tkinter.messagebox as messagebox
+from functools import partial
 from bs4 import BeautifulSoup as bs
 
 proxies = {'http': 'http://127.0.0.1:1080', 'https': 'https://127.0.0.1:1080', }
@@ -31,6 +32,7 @@ class Application(Frame):
 		down_url = pool3.map(download, down_list)
 		pool3.close()
 		pool3.join() 
+
 
 def get_homepage(url):
 	m = url.split('-')
@@ -96,8 +98,8 @@ def download_url(url):
 	# 	img_url.append('http://www.xiumm.org/data/'+m)
 	return img_url
 
-def download_img(url):
-	global down_count, dp_count, img_num
+def download_img(img_num,folder_path,url):
+	global down_count, dp_count
 	down_count = down_count+1
 	dp_count = dp_count+1
 	dp = '□' * 15
@@ -118,8 +120,6 @@ def download_img(url):
 		handler.write(img_data)
 
 def download(url):
-
-	global folder_path, img_num
 	config = {}
 	# url = 'http://www.xiumm.org/photos/LUGirls-17273-2.html'
 	url = get_homepage(url)
@@ -145,12 +145,12 @@ def download(url):
 			download_url_list.append(j)
 	# 下载图像
 	img_num = len(download_url_list)
+	func = partial(download_img, img_num, folder_path)
 	t1 = int(time.time())
 	pool2 = ThreadPool(30)
-	pool2.map(download_img, download_url_list)
+	pool2.map(func, download_url_list)
 	pool2.close()
 	pool2.join()
-	#pool2.join()
 	t2 = int(time.time())	
 	total_size = folder_size(folder_path)
 	print('\n共计下载图片: '+str(img_num)+'张\n耗时: '+str(t2-t1)+'秒。\n文件夹大小:'+total_size+'\n文件默认保存在桌面:'+folder_name)

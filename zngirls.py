@@ -23,9 +23,9 @@ def config_url(url):
     print(folder_name)
     desktop_path = os.path.join(os.path.expanduser("~"), 'Desktop')
     folder_path = os.path.join(desktop_path, folder_name)
-    pattern_url = '(?<=gallery)\/\d{5}\/\d{5}\/(?=s)'
+    pattern_url = '(?<=gallery)\/\d{5}\/\d{5}(?=\/)'
     match_url = re.findall(pattern_url, hs.text)[0]
-    url_head = 'https://t1.onvshen.com:85/gallery' + match_url + 's/'
+    url_head = 'https://t1.onvshen.com:85/gallery' + match_url + '/'
     img_url = []
     img_url.append(url_head + '0.jpg')
     for i in range(1, img_num):
